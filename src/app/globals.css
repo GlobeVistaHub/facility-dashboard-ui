@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #131313;
+  --color-surface: #131313;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+  --color-primary: #2ddbde;
+  --color-primary-container: #008082;
+  --color-on-primary-fixed-variant: #004f51;
+  --color-on-primary-container: #e3ffff;
+  --color-secondary-container: #ffbf00;
+  --color-tertiary-container: #737373;
+  --color-error: #ffb4ab;
+  --color-outline: #879392;
+  --color-outline-variant: #3e4949;
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #bdc9c8;
+  --color-surface-variant: #353534;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Remove default color schemes and apply the strict dark theme */
+:root {
+  color-scheme: dark;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+.glass-panel {
+  background-color: color-mix(in srgb, var(--color-surface-variant) 60%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+  /* 1px inner-glow top-down simulating edge of a glass pane */
+  box-shadow: inset 0 1px 0 rgba(135, 147, 146, 0.1); 
+}
+
+.ghost-border {
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+}
