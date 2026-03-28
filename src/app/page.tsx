@@ -1,5 +1,8 @@
 import MetricCard from "@/components/dashboard/MetricCard";
 import MaintenanceTable from "@/components/dashboard/MaintenanceTable";
+import {
+  UserButton
+} from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -18,28 +21,31 @@ export default function Home() {
           <button className="w-12 h-12 rounded-full bg-surface-container hover:bg-surface-container-highest transition-colors flex items-center justify-center ghost-border relative">
             <span className="material-symbols-outlined text-on-surface">search</span>
           </button>
+          <div className="flex items-center justify-center w-10 h-10">
+            <UserButton />
+          </div>
         </div>
       </header>
 
       {/* Metrics Row */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-4">
-        <MetricCard 
-          title="إجمالي التذاكر النشطة" 
-          value={24} 
-          icon="confirmation_number" 
+        <MetricCard
+          title="إجمالي التذاكر النشطة"
+          value={24}
+          icon="confirmation_number"
           highlight="primary"
           trend={{ value: "+3 عن الأمس", isUp: false }}
         />
-        <MetricCard 
-          title="الأعطال التي تم حلها" 
-          value={142} 
-          icon="check_circle" 
+        <MetricCard
+          title="الأعطال التي تم حلها"
+          value={142}
+          icon="check_circle"
           trend={{ value: "معدل استجابة أسرع بـ 12%", isUp: true }}
         />
-        <MetricCard 
-          title="الأصول الحرجة المتوقفة" 
-          value={1} 
-          icon="warning" 
+        <MetricCard
+          title="الأصول الحرجة المتوقفة"
+          value={1}
+          icon="warning"
           highlight="error"
         />
       </section>
@@ -48,7 +54,7 @@ export default function Home() {
       <section className="w-full flex-1 min-h-[500px] mt-4 flex flex-col gap-6">
         <MaintenanceTable />
       </section>
-      
+
       {/* Footer */}
       <footer className="mt-8 pt-6 border-t ghost-border border-outline-variant/20 flex justify-between items-center text-sm font-sans text-on-surface-variant w-full">
         <span>جميع الحقوق محفوظة © 2026 GlobeVistaHub Systems</span>
