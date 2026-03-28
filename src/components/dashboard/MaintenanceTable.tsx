@@ -19,14 +19,40 @@ export default function MaintenanceTable() {
   useEffect(() => {
     async function fetchTickets() {
       try {
-        const response = await fetch("http://localhost:5001/api/tickets");
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://psalaayzizmoflskttgg.supabase.co";
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_rerBJpPEefsGUx5wAvnXfQ_l8Sj2RPU";
+
+        const response = await fetch(
+          `${supabaseUrl}/rest/v1/tickets?select=*&order=created_at.desc`,
+          {
+            headers: {
+              "apikey": supabaseKey,
+              "Authorization": `Bearer ${supabaseKey}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         if (!response.ok) {
-          throw new Error("خطأ في جلب بيانات التذاكر");
+          throw new Error("خطأ في جلب بيانات التذاكر من قاعدة البيانات");
         }
+        
         const data = await response.json();
-        setTickets(data);
+        
+        // Map created_at to timestamp to match the existing UI interface
+        const mappedTickets = data.map((t: any) => ({
+          ...t,
+          timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
+            hour: "2-digit",
+            minute: "2-digit",
+            day: "2-digit",
+            month: "2-digit",
+          }),
+        }));
+
+        setTickets(mappedTickets);
       } catch (err: any) {
-        setError(err.message || "فشل الاتصال بالخادم");
+        setError(err.message || "فشل الاتصال بقاعدة البيانات");
       } finally {
         setLoading(false);
       }
