@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createClerkSupabaseClient } from "@/utils/supabaseClient";
+import { useAuth } from "@clerk/nextjs";
 
 interface Ticket {
   ticket_number: string;
@@ -9,49 +11,54 @@ interface Ticket {
   description: string;
   status: string;
   timestamp: string;
+  created_at: string;
 }
 
 export default function MaintenanceTable() {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTickets() {
+      if (!isLoaded || !isSignedIn) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://psalaayzizmoflskttgg.supabase.co";
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_rerBJpPEefsGUx5wAvnXfQ_l8Sj2RPU";
-
-        const response = await fetch(
-          `${supabaseUrl}/rest/v1/tickets?select=*&order=created_at.desc`,
-          {
-            headers: {
-              "apikey": supabaseKey,
-              "Authorization": `Bearer ${supabaseKey}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("خطأ في جلب بيانات التذاكر من قاعدة البيانات");
+        const token = await getToken({ template: "supabase" });
+        if (!token) {
+          throw new Error("فشل الحصول على رمز المصادقة");
         }
-        
-        const data = await response.json();
-        
-        // Map created_at to timestamp to match the existing UI interface
-        const mappedTickets = data.map((t: any) => ({
-          ...t,
-          timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
-            hour: "2-digit",
-            minute: "2-digit",
-            day: "2-digit",
-            month: "2-digit",
-          }),
-        }));
 
-        setTickets(mappedTickets);
+        const supabase = createClerkSupabaseClient(token);
+        const { data, error: supabaseError } = await supabase
+          .from("tickets")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (supabaseError) {
+          throw supabaseError;
+        }
+
+        if (data) {
+          // Map created_at to timestamp to match the existing UI interface
+          const mappedTickets = data.map((t: any) => ({
+            ...t,
+            timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+            }),
+          }));
+
+          setTickets(mappedTickets);
+        }
       } catch (err: any) {
+        console.error("Supabase error:", err);
         setError(err.message || "فشل الاتصال بقاعدة البيانات");
       } finally {
         setLoading(false);
@@ -59,7 +66,7 @@ export default function MaintenanceTable() {
     }
 
     fetchTickets();
-  }, []);
+  }, [getToken, isLoaded, isSignedIn]);
 
   // Map Arabic statuses to color codes
   const getStatusStyle = (status: string) => {
