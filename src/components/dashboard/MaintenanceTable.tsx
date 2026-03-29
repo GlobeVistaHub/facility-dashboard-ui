@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createClerkSupabaseClient } from "@/utils/supabaseClient";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 
 interface Ticket {
   ticket_number: string;
@@ -15,14 +15,23 @@ interface Ticket {
 }
 
 export default function MaintenanceTable() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded: authLoaded, isSignedIn } = useAuth();
+  const { user, isLoaded: userLoaded } = useUser();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isAdmin = user?.publicMetadata?.role === "admin";
+  const isReady = authLoaded && userLoaded;
+
   useEffect(() => {
     async function fetchTickets() {
-      if (!isLoaded || !isSignedIn) {
+      if (!isReady || !isSignedIn) {
+        setLoading(false);
+        return;
+      }
+
+      if (!isAdmin) {
         setLoading(false);
         return;
       }
@@ -44,7 +53,6 @@ export default function MaintenanceTable() {
         }
 
         if (data) {
-          // Map created_at to timestamp to match the existing UI interface
           const mappedTickets = data.map((t: any) => ({
             ...t,
             timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
@@ -66,16 +74,9 @@ export default function MaintenanceTable() {
     }
 
     fetchTickets();
-  }, [getToken, isLoaded, isSignedIn]);
+  }, [getToken, isReady, isSignedIn, isAdmin]);
 
-  // Map Arabic statuses to color codes
   const getStatusStyle = (status: string) => {
-    if (status.includes("حرج") || status.includes("طوارئ")) {
-      return "bg-error/10 text-error";
-    }
-    if (status.includes("قيد المعالجة") || status === "جديد" || status.includes("نشط")) {
-      return "bg-primary/10 text-primary";
-    }
     if (status.includes("مكتمل") || status.includes("تم الحل") || status.includes("مغلق")) {
       return "bg-outline/10 text-on-surface-variant";
     }
