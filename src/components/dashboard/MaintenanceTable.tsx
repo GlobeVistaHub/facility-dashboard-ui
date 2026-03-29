@@ -25,32 +25,28 @@ export default function MaintenanceTable() {
   const isReady = authLoaded && userLoaded;
 
   useEffect(() => {
-    async function fetchTickets() {
-      if (!isReady || !isSignedIn) {
-        setLoading(false);
-        return;
-      }
+    let supabase: any = null;
+    let channel: any = null;
 
-      if (!isAdmin) {
-        setLoading(false);
+    async function initSupabase() {
+      if (!isReady || !isSignedIn || !isAdmin) {
+        if (isReady) setLoading(false);
         return;
       }
 
       try {
         const token = await getToken({ template: "supabase" });
-        if (!token) {
-          throw new Error("فشل الحصول على رمز المصادقة");
-        }
+        if (!token) throw new Error("فشل الحصول على رمز المصادقة");
 
-        const supabase = createClerkSupabaseClient(token);
+        supabase = createClerkSupabaseClient(token);
+
+        // 1. Initial Fetch
         const { data, error: supabaseError } = await supabase
           .from("tickets")
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (supabaseError) {
-          throw supabaseError;
-        }
+        if (supabaseError) throw supabaseError;
 
         if (data) {
           const mappedTickets = data.map((t: any) => ({
@@ -62,9 +58,31 @@ export default function MaintenanceTable() {
               month: "2-digit",
             }),
           }));
-
           setTickets(mappedTickets);
         }
+
+        // 2. Real-time Subscription
+        channel = supabase
+          .channel("realtime-tickets")
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "tickets" },
+            (payload: any) => {
+              const newTicket = payload.new;
+              const mapped = {
+                ...newTicket,
+                timestamp: new Date(newTicket.created_at).toLocaleString("ar-SA", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  day: "2-digit",
+                  month: "2-digit",
+                }),
+              };
+              setTickets((prev) => [mapped, ...prev]);
+            }
+          )
+          .subscribe();
+
       } catch (err: any) {
         console.error("Supabase error:", err);
         setError(err.message || "فشل الاتصال بقاعدة البيانات");
@@ -73,7 +91,13 @@ export default function MaintenanceTable() {
       }
     }
 
-    fetchTickets();
+    initSupabase();
+
+    return () => {
+      if (channel) {
+        channel.unsubscribe();
+      }
+    };
   }, [getToken, isReady, isSignedIn, isAdmin]);
 
   const getStatusStyle = (status: string) => {
@@ -94,7 +118,7 @@ export default function MaintenanceTable() {
       </div>
 
       <div className="overflow-x-auto">
-        {loading ? (
+        {!isReady || loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-primary">
             <span className="material-symbols-outlined text-4xl animate-spin mb-2">autorenew</span>
             <span className="text-sm font-sans font-medium">جاري تحميل البيانات...</span>
@@ -128,7 +152,7 @@ export default function MaintenanceTable() {
                 <th className="py-4 px-6 font-medium">رقم الهاتف</th>
                 <th className="py-4 px-6 font-medium">الفئة</th>
                 <th className="py-4 px-6 font-medium text-right">الوصف</th>
-                <th className="py-4 px-6 font-medium">الحالة</th>
+                <th className="py-4 px-6 font-medium text-center">الحالة</th>
                 <th className="py-4 px-6 font-medium text-left">الوقت</th>
               </tr>
             </thead>
@@ -152,7 +176,7 @@ export default function MaintenanceTable() {
                       {ticket.category}
                     </td>
                     <td className="py-4 px-6 text-sm text-on-surface-variant max-w-[300px] truncate">{ticket.description}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 text-center">
                       <span className={`px-3 py-1 rounded-full text-[11px] font-bold inline-flex ${getStatusStyle(ticket.status)}`}>
                         {ticket.status}
                       </span>
