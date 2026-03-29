@@ -39,6 +39,10 @@ export default function MaintenanceTable() {
         if (!token) throw new Error("فشل الحصول على رمز المصادقة");
 
         supabase = createClerkSupabaseClient(token);
+        
+        // IMPORTANT: WebSockets don't send HTTP headers. We MUST explicitly
+        // give the Realtime client the Clerk JWT so it can pass RLS!
+        supabase.realtime.setAuth(token);
 
         // 1. Initial Fetch
         const { data, error: supabaseError } = await supabase
@@ -151,8 +155,8 @@ export default function MaintenanceTable() {
           </div>
         ) : !isAdmin ? (
           <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant/60">
-            <span className="material-symbols-outlined text-5xl mb-4 opacity-20">gpp_maybe</span>
-            <span className="text-base font-sans font-medium">ليس لديك صلاحية لعرض هذه البيانات</span>
+            <span className="material-symbols-outlined text-5xl mb-4 text-error opacity-90 drop-shadow-sm">gpp_maybe</span>
+            <span className="text-base font-sans font-medium text-error">ليس لديك صلاحية لعرض هذه البيانات</span>
           </div>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant/40">
