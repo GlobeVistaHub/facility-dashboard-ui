@@ -36,14 +36,14 @@ export default function RootLayout({
         <head>
           <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         </head>
-        <body className="min-h-full flex flex-row bg-background text-on-surface relative overflow-hidden">
+        <body className="min-h-screen flex flex-col md:flex-row bg-background text-on-surface relative overflow-x-hidden">
           {/* Background Ambient Layers */}
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
-          <div className="absolute bottom-[-20%] left-0 w-[600px] h-[600px] bg-secondary-container/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+          <div className="fixed top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+          <div className="fixed bottom-[-20%] left-0 w-[600px] h-[600px] bg-secondary-container/5 rounded-full blur-[100px] pointer-events-none -z-10" />
           
           <Sidebar />
           
-          <main className="flex-1 flex flex-col h-screen overflow-y-auto w-full">
+          <main className="flex-1 flex flex-col min-h-screen md:h-screen overflow-y-auto w-full pb-20 md:pb-0">
             {children}
           </main>
         </body>

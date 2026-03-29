@@ -12,39 +12,38 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 h-full bg-surface-container-low/80 backdrop-blur-xl border-l ghost-border border-outline-variant flex flex-col p-6 shrink-0 relative z-10 glass-panel">
-      {/* Brand logo / Title */}
-      <div className="mb-12">
+    <aside className="fixed bottom-0 left-0 right-0 h-16 bg-surface-container-low/95 backdrop-blur-xl border-t ghost-border border-outline-variant flex flex-row items-center justify-around px-2 z-50 md:sticky md:top-0 md:right-0 md:bottom-auto md:left-auto md:w-64 md:h-screen md:border-t-0 md:border-l md:flex-col md:p-6 md:justify-start glass-panel transition-all duration-300 overflow-hidden">
+      {/* Brand logo - Hidden on mobile */}
+      <div className="hidden md:block mb-12">
         <h1 className="font-display text-2xl font-bold text-primary tracking-tight">مركز التحكم</h1>
         <p className="text-on-surface-variant font-sans text-sm mt-1">إدارة المرافق الهندسية</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2">
+      <nav className="flex flex-row md:flex-col md:flex-1 gap-1 md:gap-2 w-full justify-around md:justify-start">
         {navItems.map((item) => (
           <Link
             key={item.name}
             href={item.href}
-            className={`flex items-center gap-4 px-4 py-3 rounded-md transition-all duration-200 ${
+            className={`flex flex-col md:flex-row items-center gap-1 md:gap-4 px-2 md:px-4 py-2 md:py-3 rounded-lg transition-all duration-200 ${
               item.active
-                ? "bg-gradient-to-br from-primary to-primary-container text-on-primary-fixed-variant font-bold shadow-lg shadow-black/20"
-                : "text-on-surface-variant hover:bg-surface-container-highest hover:text-white"
+                ? "md:bg-gradient-to-br md:from-primary md:to-primary-container text-primary md:text-on-primary-fixed-variant font-bold md:shadow-lg md:shadow-black/20"
+                : "text-on-surface-variant hover:bg-surface-container-highest md:hover:text-white"
             }`}
           >
-            {/* We can use material symbols if included, simply text for now or abstract icons */}
-            <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-            <span className="font-sans text-sm">{item.name}</span>
+            <span className={`material-symbols-outlined text-[20px] md:text-[22px] ${item.active ? 'fill-1' : ''}`}>{item.icon}</span>
+            <span className="font-sans text-[10px] md:text-sm font-medium">{item.name}</span>
           </Link>
         ))}
       </nav>
 
-      {/* User Profile */}
-      <div className="pt-6 border-t ghost-border border-outline-variant flex items-center gap-3">
+      {/* User Profile - Hidden on mobile */}
+      <div className="hidden md:flex pt-6 border-t ghost-border border-outline-variant items-center gap-3 w-full">
         <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-display font-bold text-primary">
           ش
         </div>
-        <div>
-          <p className="text-sm font-sans font-bold text-on-surface">م. شريف سيف</p>
+        <div className="truncate">
+          <p className="text-sm font-sans font-bold text-on-surface truncate">م. شريف سيف</p>
           <p className="text-xs font-sans text-on-surface-variant">مدير العمليات</p>
         </div>
       </div>

@@ -117,76 +117,137 @@ export default function MaintenanceTable() {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="flex-1 overflow-y-auto">
         {!isReady || loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-primary">
-            <span className="material-symbols-outlined text-4xl animate-spin mb-2">autorenew</span>
-            <span className="text-sm font-sans font-medium">جاري تحميل البيانات...</span>
+          <div className="flex flex-col items-center justify-center py-24 text-primary bg-surface-container-lowest/5 animate-pulse">
+            <span className="material-symbols-outlined text-5xl animate-spin mb-4">progress_activity</span>
+            <span className="text-base font-sans font-medium tracking-wide">جاري مزامنة البيانات اللحظية...</span>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-error">
-            <span className="material-symbols-outlined text-4xl mb-2">error</span>
-            <span className="text-sm font-sans font-medium">{error}</span>
+          <div className="flex flex-col items-center justify-center py-20 text-error px-6 text-center">
+            <span className="material-symbols-outlined text-5xl mb-4">cloud_off</span>
+            <span className="text-base font-sans font-medium">{error}</span>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-error/10 hover:bg-error/20 rounded-full text-sm font-bold transition-all"
+            >
+              إعادة المحاولة
+            </button>
           </div>
         ) : !isSignedIn ? (
           <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2">vpn_key</span>
-            <span className="text-sm font-sans font-medium">يرجى تسجيل الدخول لعرض تذاكر الصيانة</span>
+            <span className="material-symbols-outlined text-5xl mb-4">lock</span>
+            <span className="text-base font-sans font-medium">يرجى تسجيل الدخول للوصول إلى النظام</span>
           </div>
         ) : !isAdmin ? (
-          <div className="flex flex-col items-center justify-center py-24 text-error bg-error/5 mx-6 my-8 rounded-xl border border-error/10">
-            <span className="material-symbols-outlined text-6xl mb-4">gpp_maybe</span>
-            <h3 className="text-xl font-bold mb-2">عذراً، انت لا تملك صلاحية الوصول</h3>
-            <p className="text-on-surface-variant text-sm max-w-sm text-center">لا تملك صلاحيات الآدمن الكافية لعرض هذا الجدول. يرجى التواصل مع مدير النظام.</p>
+          <div className="flex flex-col items-center justify-center py-24 text-error bg-error/5 mx-6 my-8 rounded-2xl border border-error/10 shadow-2xl shadow-error/5">
+            <span className="material-symbols-outlined text-7xl mb-6 text-error/80">security_update_warning</span>
+            <h3 className="text-2xl font-bold mb-3">دخول غير مصرح به</h3>
+            <p className="text-on-surface-variant text-base max-w-sm text-center px-6 leading-relaxed">أنت لا تملك صلاحيات "مدير النظام" المطلوبة لعرض هذه البيانات الحساسة.</p>
           </div>
         ) : tickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-            <span className="text-sm font-sans font-medium">لا توجد تذاكر صيانة نشطة الآن</span>
+          <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant/40">
+            <span className="material-symbols-outlined text-6xl mb-4">history_toggle_off</span>
+            <span className="text-lg font-sans font-medium">لا توجد بلاغات نشطة في الوقت الحالي</span>
           </div>
         ) : (
-          <table className="w-full text-right font-sans border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low/50 text-on-surface-variant text-sm border-b ghost-border border-outline-variant/30">
-                <th className="py-4 px-6 font-medium">رقم التذكرة</th>
-                <th className="py-4 px-6 font-medium">رقم الهاتف</th>
-                <th className="py-4 px-6 font-medium">الفئة</th>
-                <th className="py-4 px-6 font-medium text-right">الوصف</th>
-                <th className="py-4 px-6 font-medium text-center">الحالة</th>
-                <th className="py-4 px-6 font-medium text-left">الوقت</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="w-full">
+            {/* Desktop Table - Hidden on Mobile */}
+            <table className="hidden md:table w-full text-right font-sans border-collapse">
+              <thead>
+                <tr className="bg-surface-container-low/80 backdrop-blur-sm text-on-surface-variant text-sm border-b ghost-border border-outline-variant/30 sticky top-0 z-20">
+                  <th className="py-5 px-6 font-bold tracking-wider">رقم التذكرة</th>
+                  <th className="py-5 px-6 font-bold tracking-wider">رقم الهاتف</th>
+                  <th className="py-5 px-6 font-bold tracking-wider">الفئة</th>
+                  <th className="py-5 px-6 font-bold tracking-wider text-right">الوصف</th>
+                  <th className="py-5 px-6 font-bold tracking-wider text-center">الحالة</th>
+                  <th className="py-5 px-6 font-bold tracking-wider text-left">الوقت</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.map((ticket, index) => {
+                  const isCritical = ticket.status.includes("حرج") || ticket.status.includes("طوارئ");
+                  return (
+                    <tr 
+                      key={ticket.ticket_number || index} 
+                      className={`group transition-all duration-300 ${
+                        index !== tickets.length - 1 ? 'border-b ghost-border border-outline-variant/5' : ''
+                      } hover:bg-surface-container-highest/40 animate-in fade-in slide-in-from-right-2`}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <td className="py-5 px-6 text-sm text-on-surface font-bold font-mono tracking-tighter">#{ticket.ticket_number}</td>
+                      <td className="py-5 px-6 text-sm font-sans text-on-surface-variant font-medium">{ticket.phone_number}</td>
+                      <td className="py-5 px-6 text-sm text-primary font-black relative">
+                        {isCritical && (
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-error rounded-l-full shadow-[0_0_10px_rgba(255,0,0,0.5)]" />
+                        )}
+                        {ticket.category}
+                      </td>
+                      <td className="py-5 px-6 text-sm text-on-surface-variant max-w-[350px] leading-relaxed truncate">{ticket.description}</td>
+                      <td className="py-5 px-6 text-center">
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest inline-flex shadow-sm ${getStatusStyle(ticket.status)}`}>
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="py-5 px-6 text-sm text-on-surface-variant text-left font-mono tracking-tighter opacity-70">{ticket.timestamp}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* Mobile Cards - Hidden on Desktop */}
+            <div className="md:hidden flex flex-col gap-4 p-4 pb-24">
               {tickets.map((ticket, index) => {
                 const isCritical = ticket.status.includes("حرج") || ticket.status.includes("طوارئ");
-                
                 return (
-                  <tr 
-                    key={ticket.ticket_number || index} 
-                    className={`group transition-colors ${
-                      index !== tickets.length - 1 ? 'border-b ghost-border border-outline-variant/10' : ''
-                    } hover:bg-surface-container-high`}
+                  <div 
+                    key={ticket.ticket_number || index}
+                    className="relative bg-surface-container-high/60 backdrop-blur-lg rounded-2xl p-5 border ghost-border border-outline-variant/20 shadow-xl animate-in zoom-in-95 duration-300 overflow-hidden"
                   >
-                    <td className="py-4 px-6 text-sm text-on-surface font-medium">{ticket.ticket_number}</td>
-                    <td className="py-4 px-6 text-sm font-sans text-on-surface-variant font-medium">{ticket.phone_number}</td>
-                    <td className="py-4 px-6 text-sm text-on-surface font-bold relative">
-                      {isCritical && (
-                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-1 h-8 bg-error rounded-full" />
-                      )}
-                      {ticket.category}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-on-surface-variant max-w-[300px] truncate">{ticket.description}</td>
-                    <td className="py-4 px-6 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold inline-flex ${getStatusStyle(ticket.status)}`}>
+                    {isCritical && (
+                      <div className="absolute top-0 right-0 w-2 h-full bg-error" />
+                    )}
+                    
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <span className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest block mb-1">تذكرة رقم</span>
+                        <h3 className="text-xl font-bold text-primary font-mono tracking-tighter">#{ticket.ticket_number}</h3>
+                      </div>
+                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest uppercase ${getStatusStyle(ticket.status)}`}>
                         {ticket.status}
                       </span>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-on-surface-variant text-left font-mono">{ticket.timestamp}</td>
-                  </tr>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
+                      <div>
+                        <span className="text-on-surface-variant/60 block mb-1">الفئة:</span>
+                        <span className="text-on-surface font-bold text-sm">{ticket.category}</span>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-on-surface-variant/60 block mb-1">الوقت:</span>
+                        <span className="text-on-surface font-mono opacity-80">{ticket.timestamp}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t ghost-border border-outline-variant/10">
+                      <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-3">
+                        {ticket.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/10 flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px] text-primary">phone_iphone</span>
+                          <span className="text-xs font-bold text-on-surface-variant">{ticket.phone_number}</span>
+                       </div>
+                       <button className="text-primary text-xs font-black uppercase tracking-widest">التفاصيل ←</button>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
         )}
       </div>
     </div>
