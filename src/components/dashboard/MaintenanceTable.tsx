@@ -68,6 +68,7 @@ export default function MaintenanceTable() {
             "postgres_changes",
             { event: "INSERT", schema: "public", table: "tickets" },
             (payload: any) => {
+              console.log("Real-time insertion detected!", payload);
               const newTicket = payload.new;
               const mapped = {
                 ...newTicket,
@@ -81,10 +82,18 @@ export default function MaintenanceTable() {
               setTickets((prev) => [mapped, ...prev]);
             }
           )
-          .subscribe();
+          .subscribe((status: string) => {
+            console.log("Real-time subscription status:", status);
+            if (status === 'SUBSCRIBED') {
+              console.log("Successfully connected to the real-time broadcast!");
+            }
+            if (status === 'CHANNEL_ERROR') {
+              setError("فشل الاتصال اللحظي - يرجى فحص إعدادات Supabase");
+            }
+          });
 
       } catch (err: any) {
-        console.error("Supabase error:", err);
+        console.error("Supabase connection fatal error:", err);
         setError(err.message || "فشل الاتصال بقاعدة البيانات");
       } finally {
         setLoading(false);
@@ -95,6 +104,7 @@ export default function MaintenanceTable() {
 
     return () => {
       if (channel) {
+        console.log("Cleaning up real-time subscription...");
         channel.unsubscribe();
       }
     };
