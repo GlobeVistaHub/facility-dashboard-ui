@@ -213,7 +213,7 @@ export default function MaintenanceTable() {
                         )}
                         {ticket.category}
                       </td>
-                      <td className="py-5 px-6 text-sm text-on-surface-variant max-w-[350px] leading-relaxed truncate">{ticket.description}</td>
+                      <td className="py-5 px-6 text-sm text-on-surface-variant max-w-[350px] leading-relaxed truncate">{ticket.description?.replace(/[.۔]+$/, '')}</td>
                       <td className="py-5 px-6 text-center">
                         <span className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest inline-flex shadow-sm ${getStatusStyle(ticket.status)}`}>
                           {ticket.status}
@@ -262,7 +262,7 @@ export default function MaintenanceTable() {
 
                     <div className="pt-4 border-t ghost-border border-outline-variant/10">
                       <p className="text-sm text-on-surface-variant leading-relaxed line-clamp-3">
-                        {ticket.description}
+                        {ticket.description?.replace(/[.۔]+$/, '')}
                       </p>
                     </div>
 
