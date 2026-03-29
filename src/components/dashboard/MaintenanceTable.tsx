@@ -27,6 +27,7 @@ export default function MaintenanceTable() {
   useEffect(() => {
     let supabase: any = null;
     let channel: any = null;
+    let pollingInterval: NodeJS.Timeout | null = null;
 
     async function initSupabase() {
       if (!isReady || !isSignedIn || !isAdmin) {
@@ -44,28 +45,38 @@ export default function MaintenanceTable() {
         // give the Realtime client the Clerk JWT so it can pass RLS!
         supabase.realtime.setAuth(token);
 
+        // Define fetch logic for initial load and polling fallback
+        const fetchTickets = async () => {
+          const { data, error: supabaseError } = await supabase
+            .from("tickets")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+          if (!supabaseError && data) {
+            const mappedTickets = data.map((t: any) => ({
+              ...t,
+              timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+              }),
+            }));
+            
+            // Safe state update to avoid overriding optimistic UI if needed
+            setTickets(mappedTickets);
+          }
+        };
+
         // 1. Initial Fetch
-        const { data, error: supabaseError } = await supabase
-          .from("tickets")
-          .select("*")
-          .order("created_at", { ascending: false });
+        await fetchTickets();
 
-        if (supabaseError) throw supabaseError;
+        // 2. Fallback Polling: Ensure the dashboard updates automatically even if WebSockets are blocked by corporate firewalls
+        pollingInterval = setInterval(() => {
+          fetchTickets();
+        }, 8000); // 8-second safety net
 
-        if (data) {
-          const mappedTickets = data.map((t: any) => ({
-            ...t,
-            timestamp: new Date(t.created_at).toLocaleString("ar-SA", {
-              hour: "2-digit",
-              minute: "2-digit",
-              day: "2-digit",
-              month: "2-digit",
-            }),
-          }));
-          setTickets(mappedTickets);
-        }
-
-        // 2. Real-time Subscription
+        // 3. Real-time Subscription (Instant updates when available)
         channel = supabase
           .channel("realtime-tickets")
           .on(
@@ -83,7 +94,12 @@ export default function MaintenanceTable() {
                   month: "2-digit",
                 }),
               };
-              setTickets((prev) => [mapped, ...prev]);
+              
+              setTickets((prev) => {
+                // Prevent duplicates if polling already fetched it
+                if (prev.some((t) => t.ticket_number === mapped.ticket_number)) return prev;
+                return [mapped, ...prev];
+              });
             }
           )
           .subscribe((status: string) => {
@@ -92,7 +108,7 @@ export default function MaintenanceTable() {
               console.log("Successfully connected to the real-time broadcast!");
             }
             if (status === 'CHANNEL_ERROR') {
-              setError("فشل الاتصال اللحظي - يرجى فحص إعدادات Supabase");
+              console.warn("Real-time connection failed, falling back to polling.");
             }
           });
 
@@ -107,6 +123,7 @@ export default function MaintenanceTable() {
     initSupabase();
 
     return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
       if (channel) {
         console.log("Cleaning up real-time subscription...");
         channel.unsubscribe();
