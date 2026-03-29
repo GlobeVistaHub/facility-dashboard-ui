@@ -150,10 +150,9 @@ export default function MaintenanceTable() {
             <span className="text-base font-sans font-medium">يرجى تسجيل الدخول للوصول إلى النظام</span>
           </div>
         ) : !isAdmin ? (
-          <div className="flex flex-col items-center justify-center py-24 text-error bg-error/5 mx-6 my-8 rounded-2xl border border-error/10 shadow-2xl shadow-error/5">
-            <span className="material-symbols-outlined text-7xl mb-6 text-error/80">security_update_warning</span>
-            <h3 className="text-2xl font-bold mb-3">دخول غير مصرح به</h3>
-            <p className="text-on-surface-variant text-base max-w-sm text-center px-6 leading-relaxed">أنت لا تملك صلاحيات "مدير النظام" المطلوبة لعرض هذه البيانات الحساسة.</p>
+          <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant/60">
+            <span className="material-symbols-outlined text-5xl mb-4 opacity-20">gpp_maybe</span>
+            <span className="text-base font-sans font-medium">ليس لديك صلاحية لعرض هذه البيانات</span>
           </div>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-on-surface-variant/40">
