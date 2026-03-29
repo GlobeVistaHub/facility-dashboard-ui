@@ -31,6 +31,7 @@ export default function MaintenanceTable() {
         return;
       }
 
+      // If signed in but not an admin, don't even try to fetch
       if (!isAdmin) {
         setLoading(false);
         return;
@@ -77,83 +78,97 @@ export default function MaintenanceTable() {
   }, [getToken, isReady, isSignedIn, isAdmin]);
 
   const getStatusStyle = (status: string) => {
-    if (status.includes("مكتمل") || status.includes("تم الحل") || status.includes("مغلق")) {
-      return "bg-outline/10 text-on-surface-variant";
+    switch (status) {
+      case "جديد":
+        return "bg-cyan-500/20 text-cyan-400 border border-cyan-500/50";
+      case "قيد التنفيذ":
+        return "bg-amber-500/20 text-amber-400 border border-amber-500/50";
+      case "مكتمل":
+        return "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50";
+      default:
+        return "bg-slate-500/20 text-slate-400 border border-slate-500/50";
     }
-    // Default/warning style
-    return "bg-secondary-container/10 text-secondary-container";
   };
 
   return (
-    <div className="bg-surface-container rounded-xl ghost-border overflow-hidden flex flex-col w-full h-full relative">
-      <div className="p-6 border-b ghost-border border-outline-variant/30 flex justify-between items-center">
-        <h2 className="font-display text-xl font-bold text-on-surface">جدول طلبات الصيانة النشطة</h2>
-        <button className="flex items-center gap-2 px-4 py-2 bg-surface-variant/40 hover:bg-surface-variant/60 rounded-md transition-colors text-sm font-sans font-medium text-white backdrop-blur-md">
-          <span className="material-symbols-outlined text-[18px]">filter_list</span>
-          تصفية
-        </button>
+    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl overflow-hidden shadow-xl" dir="rtl">
+      <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+        <h2 className="text-xl font-bold bg-gradient-to-l from-white to-slate-400 bg-clip-text text-transparent">جدول طلبات الصيانة النشطة</h2>
+        <div className="p-2 bg-slate-800/50 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors">
+          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+        </div>
       </div>
 
-      <div className="overflow-x-auto min-h-[300px]">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-[300px] text-primary">
-            <span className="material-symbols-outlined text-4xl animate-spin mb-2">autorenew</span>
-            <span className="text-sm font-sans font-medium">جاري تحميل البيانات...</span>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-[300px] text-error">
-            <span className="material-symbols-outlined text-4xl mb-2">error</span>
-            <span className="text-sm font-sans font-medium">{error}</span>
-          </div>
-        ) : tickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[300px] text-on-surface-variant">
-            <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-            <span className="text-sm font-sans font-medium">لا توجد تذاكر صيانة نشطة</span>
-          </div>
-        ) : (
-          <table className="w-full text-right font-sans border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low/50 text-on-surface-variant text-sm border-b ghost-border border-outline-variant/30">
-                <th className="py-4 px-6 font-medium">رقم التذكرة</th>
-                <th className="py-4 px-6 font-medium">رقم الهاتف</th>
-                <th className="py-4 px-6 font-medium">الفئة</th>
-                <th className="py-4 px-6 font-medium text-right">الوصف</th>
-                <th className="py-4 px-6 font-medium">الحالة</th>
-                <th className="py-4 px-6 font-medium text-left">الوقت</th>
+      <div className="overflow-x-auto min-h-[400px]">
+        <table className="w-full text-right">
+          <thead>
+            <tr className="border-b border-slate-800 text-slate-400 text-sm">
+              <th className="px-6 py-4">رقم التذكرة</th>
+              <th className="px-6 py-4">رقم الهاتف</th>
+              <th className="px-6 py-4">الفئة</th>
+              <th className="px-6 py-4 text-right">الوصف</th>
+              <th className="px-6 py-4 text-center">الحالة</th>
+              <th className="px-6 py-4 text-left">الوقت</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!isReady || loading ? (
+              [...Array(5)].map((_, i) => (
+                <tr key={i} className="animate-pulse border-b border-slate-800/30">
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-800 rounded w-20"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-800 rounded w-32"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-800 rounded w-16"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-800 rounded w-48"></div></td>
+                  <td className="px-6 py-4 flex justify-center"><div className="h-6 bg-slate-800 rounded-full w-20"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-800 rounded w-24"></div></td>
+                </tr>
+              ))
+            ) : !isSignedIn ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-lg">يرجى تسجيل الدخول لعرض تذاكر الصيانة</td>
               </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket, index) => {
-                const isCritical = ticket.status.includes("حرج") || ticket.status.includes("طوارئ");
-                
-                return (
-                  <tr 
-                    key={ticket.ticket_number || index} 
-                    className={`group transition-colors ${
-                      index !== tickets.length - 1 ? 'border-b ghost-border border-outline-variant/10' : ''
-                    } hover:bg-surface-container-high`}
-                  >
-                    <td className="py-4 px-6 text-sm text-on-surface font-medium">{ticket.ticket_number}</td>
-                    <td className="py-4 px-6 text-sm font-sans text-on-surface-variant font-medium">{ticket.phone_number}</td>
-                    <td className="py-4 px-6 text-sm text-on-surface font-bold relative">
-                      {isCritical && (
-                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-1 h-8 bg-error rounded-full" />
-                      )}
-                      {ticket.category}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-on-surface-variant">{ticket.description}</td>
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex ${getStatusStyle(ticket.status)}`}>
+            ) : !isAdmin ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-20 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-4 bg-red-500/10 rounded-full">
+                      <svg className="w-12 h-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H10m4-11a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-2xl font-bold text-red-400">عذراً، انت لا تملك صلاحية الوصول للإدارة</div>
+                    <div className="text-slate-400 max-w-sm">يرجى التواصل مع مدير النظام للحصول على صلاحيات الآدمن (RBAC).</div>
+                  </div>
+                </td>
+              </tr>
+            ) : tickets.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-lg">لا توجد تذاكر صيانة نشطة الآن</td>
+              </tr>
+            ) : (
+              tickets.map((ticket, index) => (
+                <tr key={ticket.ticket_number || index} className="border-b border-slate-800/30 hover:bg-slate-800/30 transition-all duration-200 group">
+                  <td className="px-6 py-4 font-mono text-cyan-400 group-hover:scale-110 origin-right transition-transform">{ticket.ticket_number}</td>
+                  <td className="px-6 py-4 text-slate-300">{ticket.phone_number}</td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-400 group-hover:text-white transition-colors">{ticket.category}</span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-400 line-clamp-1 max-w-[300px] text-right">{ticket.description}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center">
+                      <span className={`px-4 py-1 rounded-full text-xs font-medium ${getStatusStyle(ticket.status)} shadow-lg shadow-black/20`}>
                         {ticket.status}
                       </span>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-on-surface-variant text-left">{ticket.timestamp}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-slate-500 font-mono whitespace-nowrap text-left">{ticket.timestamp}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
